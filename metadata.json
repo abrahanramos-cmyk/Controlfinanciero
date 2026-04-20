@@ -1,0 +1,6 @@
+{
+  "name": "Control Financiero PWA",
+  "description": "Aplicación de control financiero personal. Registra ingresos y gastos, visualiza resúmenes por línea de tiempo, analiza gastos innecesarios, filtra movimientos y exporta los datos a Excel. Interfaz responsiva diseñada para móviles.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

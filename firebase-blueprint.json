@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "Movement": {
+      "title": "Movement",
+      "description": "A financial input or output",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string" },
+        "isNecessary": { "type": "boolean" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["userId", "amount", "type", "category", "date", "createdAt", "updatedAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "User custom category",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "name", "type", "createdAt"]
+    }
+  },
+  "firestore": {
+    "movements/{movementId}": {
+      "schema": { "$ref": "#/entities/Movement" },
+      "description": "Transactions"
+    },
+    "categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Custom categories"
+    }
+  }
+}

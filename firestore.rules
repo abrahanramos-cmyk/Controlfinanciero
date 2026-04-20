@@ -1,0 +1,67 @@
+// Firestore rules for financial app
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} { 
+      allow read, write: if false; 
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidMovement(data) {
+      return data.keys().hasAll(['userId', 'amount', 'type', 'category', 'description', 'date', 'isNecessary', 'createdAt', 'updatedAt'])
+        // We ensure strict array validation based on pillars. But this is simple app so just checking basics.
+        && data.userId == request.auth.uid
+        && data.amount is number
+        && data.type in ['income', 'expense']
+        && data.category is string && data.category.size() > 0 && data.category.size() <= 100
+        && data.description is string && data.description.size() <= 500
+        && data.date is string && data.date.size() <= 50
+        && data.isNecessary is bool
+        && data.createdAt is number
+        && data.updatedAt is number
+        && (data.get('tags', []) is list && data.get('tags', []).size() <= 20);
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['userId', 'name', 'type', 'createdAt'])
+        && data.userId == request.auth.uid
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.type in ['income', 'expense']
+        && data.createdAt is number;
+    }
+
+    match /movements/{movementId} {
+      allow get: if isSignedIn() && isValidId(movementId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() 
+        && isValidId(movementId)
+        && isValidMovement(incoming());
+        
+      allow update: if isSignedIn()
+        && isValidId(movementId)
+        && existing().userId == request.auth.uid
+        && incoming().userId == existing().userId
+        && isValidMovement(incoming())
+        && incoming().createdAt == existing().createdAt;
+
+      allow delete: if isSignedIn() && isValidId(movementId) && existing().userId == request.auth.uid;
+    }
+
+    match /categories/{categoryId} {
+      allow get: if isSignedIn() && isValidId(categoryId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isSignedIn() 
+        && isValidId(categoryId)
+        && isValidCategory(incoming());
+        
+      allow delete: if isSignedIn() && isValidId(categoryId) && existing().userId == request.auth.uid;
+    }
+  }
+}
